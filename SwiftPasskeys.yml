@@ -1,0 +1,90 @@
+Parameters:
+
+  BucketName:
+    Type: String
+    Description: S3 bucket name that hosts Lambda content
+
+  Architecture:
+    Type: String
+    Description: Executable architecture for the Lambda function
+    AllowedValues:
+      - x86_64
+      - arm64
+
+Resources:
+  
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UserPoolName: !Sub ${AWS::StackName}UserPool
+      AutoVerifiedAttributes:
+        - email
+      LambdaConfig:
+        DefineAuthChallenge: !Sub "${Lambda.Arn}"
+        CreateAuthChallenge: !Sub "${Lambda.Arn}"
+        VerifyAuthChallengeResponse: !Sub "${Lambda.Arn}"
+      Schema:
+        - AttributeDataType: String
+          Name: publicKeyCred
+          Mutable: true
+          StringAttributeConstraints:
+            MaxLength: 1024
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${AWS::StackName}TestClientApp
+      GenerateSecret: false
+      UserPoolId: !Ref UserPool
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      WriteAttributes:
+        - custom:publicKeyCred
+        - email
+        - name
+      ReadAttributes:
+        - email
+        - name
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}FunctionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
+
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: !Sub "${AWS::StackName}Function.zip"
+      FunctionName: !Sub "${AWS::StackName}"
+      Handler: !Sub "${AWS::StackName}"
+      PackageType: Zip
+      Role: !Sub "${LambdaRole.Arn}"
+      Runtime: "provided.al2"
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub "${Lambda.Arn}"
+      Principal: cognito-idp.amazonaws.com
+      Action: lambda:InvokeFunction
+      SourceArn: !Sub "${UserPool.Arn}"
