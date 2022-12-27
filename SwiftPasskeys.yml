@@ -149,14 +149,14 @@ Resources:
       IntegrationUri: !Sub "${APILambda.Arn}"
       PayloadFormatVersion: "2.0"
 
-  APIRoute:
+  RegisterGetAPIRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref API
       RouteKey: "GET /register"
       Target: !Sub "integrations/${APIIntegration}"
 
-  APIRoute:
+  RegisterPostAPIRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref API
