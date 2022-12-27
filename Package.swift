@@ -5,6 +5,10 @@ import PackageDescription
 let package = Package(
     name: "SwiftPasskeys",
     platforms: [.macOS(.v12)],
+	products: [
+		.executable(name: "SwiftPasskeyAuthorizer", targets: ["SwiftPasskeyAuthorizer"]),
+		.executable(name: "SwiftPasskeyServer", targets: ["SwiftPasskeyServer"]),
+	],
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),

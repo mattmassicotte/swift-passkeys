@@ -1,5 +1,18 @@
 import AWSLambdaRuntime
 import AWSLambdaEvents
+import Foundation
+
+struct AppSiteAssociation: Codable {
+	struct WebCredentials: Codable {
+		let apps: [String]
+	}
+
+	let webCredentials: WebCredentials
+
+	enum CodingKeys: String, CodingKey {
+		case webCredentials = "webcredentials"
+	}
+}
 
 @main
 struct HTTPHandler: LambdaHandler {
@@ -7,8 +20,11 @@ struct HTTPHandler: LambdaHandler {
 	}
 
 	func handle(_ event: APIGatewayV2Request, context: LambdaContext) async throws -> APIGatewayV2Response {
-		context.logger.debug("hello?")
+		context.logger.info("hello: \(event.rawPath)")
 
-		return APIGatewayV2Response(statusCode: .ok)
+		let content = AppSiteAssociation(webCredentials: .init(apps: ["5GXRS83U4Z.com.mycompany.PasskeyClient"]))
+		let data = try JSONEncoder().encode(content)
+
+		return APIGatewayV2Response(statusCode: .ok, body: String(data: data, encoding: .utf8))
 	}
 }

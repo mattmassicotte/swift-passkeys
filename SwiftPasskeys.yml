@@ -163,6 +163,13 @@ Resources:
       RouteKey: "POST /register"
       Target: !Sub "integrations/${APIIntegration}"
 
+  SiteAssociationAPIRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref API
+      RouteKey: "GET /.well-known/apple-app-site-association"
+      Target: !Sub "integrations/${APIIntegration}"
+
   APIStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
