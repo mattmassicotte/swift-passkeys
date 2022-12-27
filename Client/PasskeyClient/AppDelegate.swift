@@ -30,18 +30,19 @@ final class AuthViewModel: NSObject, ObservableObject {
 	}
 
 	func signUp() {
-		let provider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: "my.domain")
+		let provider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: "passkeys.massicotte.org")
 
 		let challenge = Data()
 		let name = "Blob"
 		let userID = UUID().uuidString.data(using: .utf8)!
 
-		let request = provider.createCredentialRegistrationRequest(challenge: challenge, name: name, userID: userID)
+		var request = provider.createCredentialRegistrationRequest(challenge: challenge, name: name, userID: userID)
 
 		let controller = ASAuthorizationController(authorizationRequests: [request])
 
 		controller.delegate = self
 		controller.presentationContextProvider = self
+
 
 		controller.performRequests()
 
