@@ -11,7 +11,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "SwiftPasskeys",
+            name: "SwiftPasskeyAuthorizer",
             dependencies: [
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
@@ -19,8 +19,11 @@ let package = Package(
 			plugins: [
 //				.plugin(name: "AWSLambdaPackager", package: "swift-aws-lambda-runtime"),
 			]),
-        .testTarget(
-            name: "SwiftPasskeysTests",
-            dependencies: ["SwiftPasskeys"]),
+		.executableTarget(
+			name: "SwiftPasskeyServer",
+			dependencies: [
+				.product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+				.product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
+			]),
     ]
 )

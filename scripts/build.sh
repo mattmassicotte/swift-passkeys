@@ -7,11 +7,11 @@ docker run \
      --volume "$(pwd)/:/src" \
      --workdir "/src/" \
      swift-lambda \
-     swift build --product SwiftPasskeys --static-swift-stdlib -c release
+     scripts/package.sh SwiftPasskeyAuthorizer
 
 docker run \
      --rm \
      --volume "$(pwd)/:/src" \
      --workdir "/src/" \
      swift-lambda \
-     scripts/package.sh SwiftPasskeys
+     scripts/package.sh SwiftPasskeyServer
