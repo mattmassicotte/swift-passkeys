@@ -11,6 +11,11 @@ Parameters:
       - x86_64
       - arm64
 
+Outputs:
+  InvokeURL:
+    Description: "HTTP API URL"
+    Value: !Sub "https://${API}.execute-api.${AWS::Region}.amazonaws.com/${APIStage}/passkeys"
+
 Resources:
   
   UserPool:
@@ -22,9 +27,9 @@ Resources:
       AutoVerifiedAttributes:
         - email
       LambdaConfig:
-        DefineAuthChallenge: !Sub "${Lambda.Arn}"
-        CreateAuthChallenge: !Sub "${Lambda.Arn}"
-        VerifyAuthChallengeResponse: !Sub "${Lambda.Arn}"
+        DefineAuthChallenge: !Sub "${AuthLambda.Arn}"
+        CreateAuthChallenge: !Sub "${AuthLambda.Arn}"
+        VerifyAuthChallengeResponse: !Sub "${AuthLambda.Arn}"
       Schema:
         - AttributeDataType: String
           Name: publicKeyCred
@@ -50,10 +55,10 @@ Resources:
         - email
         - name
 
-  LambdaRole:
+  AuthLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AWS::StackName}FunctionRole"
+      RoleName: SwiftPasskeyAuthorizerFunctionRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -67,24 +72,101 @@ Resources:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
 
-  Lambda:
+  AuthLambda:
     Type: AWS::Lambda::Function
     Properties:
       Architectures:
         - !Ref Architecture
       Code:
         S3Bucket: !Ref BucketName
-        S3Key: !Sub "${AWS::StackName}Function.zip"
-      FunctionName: !Sub "${AWS::StackName}"
-      Handler: !Sub "${AWS::StackName}"
+        S3Key: "SwiftPasskeyAuthorizerFunction.zip"
+      FunctionName: SwiftPasskeyAuthorizer
+      Handler: SwiftPasskeyAuthorizer
       PackageType: Zip
-      Role: !Sub "${LambdaRole.Arn}"
+      Role: !Sub "${AuthLambdaRole.Arn}"
       Runtime: "provided.al2"
 
-  LambdaPermission:
+  AuthLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub "${Lambda.Arn}"
+      FunctionName: !Sub "${AuthLambda.Arn}"
       Principal: cognito-idp.amazonaws.com
       Action: lambda:InvokeFunction
       SourceArn: !Sub "${UserPool.Arn}"
+
+  APILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SwiftPasskeyServerFunctionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
+
+  APILambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: SwiftPasskeyServerFunction.zip
+      FunctionName: SwiftPasskeyServer
+      Handler: SwiftPasskeyServer
+      PackageType: Zip
+      Role: !Sub "${APILambdaRole.Arn}"
+      Runtime: "provided.al2"
+
+  LambdaAPIPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "${APILambda.Arn}"
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${API}/*/*/*"
+
+  API:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Description: "Swift Passkey HTTP API"
+      Name: SwiftPasskey
+      ProtocolType: HTTP
+      Version: 1
+
+  APIIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref API
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "${APILambda.Arn}"
+      PayloadFormatVersion: "2.0"
+
+  APIRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref API
+      RouteKey: "GET /register"
+      Target: !Sub "integrations/${APIIntegration}"
+
+  APIRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref API
+      RouteKey: "POST /register"
+      Target: !Sub "integrations/${APIIntegration}"
+
+  APIStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref API
+      AutoDeploy: true
+      Description: "API Test Deployment"
+      StageName: Test
