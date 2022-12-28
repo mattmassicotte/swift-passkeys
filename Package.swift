@@ -12,6 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),
+		.package(url: "https://github.com/swift-server/webauthn-swift", revision: "d7c9f9f47f2df93af74e3db6dfd65b722d77c62b"),
     ],
     targets: [
         .executableTarget(
@@ -28,6 +29,7 @@ let package = Package(
 			dependencies: [
 				.product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
 				.product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
+				.product(name: "WebAuthn", package: "webauthn-swift"),
 			]),
     ]
 )

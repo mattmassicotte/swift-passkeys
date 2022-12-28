@@ -141,6 +141,14 @@ Resources:
       ProtocolType: HTTP
       Version: 1
 
+  APIStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref API
+      AutoDeploy: true
+      Description: "API Test Deployment"
+      StageName: Test
+
   APIIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -170,10 +178,16 @@ Resources:
       RouteKey: "GET /.well-known/apple-app-site-association"
       Target: !Sub "integrations/${APIIntegration}"
 
-  APIStage:
-    Type: AWS::ApiGatewayV2::Stage
+  MakeCredentialGetAPIRoute:
+    Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref API
-      AutoDeploy: true
-      Description: "API Test Deployment"
-      StageName: Test
+      RouteKey: "GET /makeCredential"
+      Target: !Sub "integrations/${APIIntegration}"
+
+  MakeCredentialPostAPIRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref API
+      RouteKey: "POST /makeCredential"
+      Target: !Sub "integrations/${APIIntegration}"

@@ -46,6 +46,15 @@
       }
     },
     {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "92a04c10fc5ce0504f8396aac7392126033e547c",
+        "version" : "2.2.2"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
@@ -61,6 +70,24 @@
       "state" : {
         "revision" : "7e3b50b38e4e66f31db6cf4a784c6af148bac846",
         "version" : "2.46.0"
+      }
+    },
+    {
+      "identity" : "swiftcbor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/unrelentingtech/SwiftCBOR.git",
+      "state" : {
+        "revision" : "98a59c305cca5c5367c3422d5e127661d4e76e24",
+        "version" : "0.4.5"
+      }
+    },
+    {
+      "identity" : "webauthn-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-server/webauthn-swift",
+      "state" : {
+        "branch" : "main",
+        "revision" : "d7c9f9f47f2df93af74e3db6dfd65b722d77c62b"
       }
     }
   ],
