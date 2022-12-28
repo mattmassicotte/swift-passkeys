@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),
-		.package(url: "https://github.com/swift-server/webauthn-swift", revision: "d7c9f9f47f2df93af74e3db6dfd65b722d77c62b"),
+		.package(url: "https://github.com/swift-server/webauthn-swift", branch: "refactor"),
     ],
     targets: [
         .executableTarget(

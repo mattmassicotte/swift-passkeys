@@ -15,6 +15,19 @@ struct AppSiteAssociation: Codable {
 	}
 }
 
+let conifg = WebAuthnConfig(relyingPartyDisplayName: "SwiftPasskeys",
+							relyingPartyID: "1",
+//							relyingPartyOrigin: "passkeys.massicotte.org",
+							timeout: 30.0)
+
+let manager = WebAuthnManager(config: conifg)
+
+struct AuthUser: User {
+	var userID: String
+	var name: String
+	var displayName: String
+}
+
 @main
 struct HTTPHandler: LambdaHandler {
 	init(context: AWSLambdaRuntimeCore.LambdaInitializationContext) async throws {
@@ -37,7 +50,27 @@ struct HTTPHandler: LambdaHandler {
 
 			return response
 		case (.GET, "/Test/makeCredential"):
-			return .init(statusCode: .ok)
+			guard let username = event.queryStringParameters?["username"] else {
+				return .init(statusCode: .badRequest)
+			}
+			
+			let params = event.queryStringParameters ?? [:]
+
+			context.logger.info("params: \(params)")
+
+			let user = AuthUser(userID: UUID().uuidString, name: username, displayName: username)
+
+			let (options, _) = try manager.beginRegistration(user: user)
+
+			context.logger.info("challenge: \(options.challenge)")
+
+			let data = try JSONEncoder().encode(options)
+
+			var response = APIGatewayV2Response(statusCode: .created,
+												body: String(data: data, encoding: .utf8))
+			response.headers = ["content-type": "application/json"]
+
+			return response
 		case (.POST, "/Test/makeCredential"):
 			return .init(statusCode: .ok)
 		default:
