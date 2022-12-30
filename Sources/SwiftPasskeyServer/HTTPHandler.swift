@@ -2,6 +2,7 @@ import AWSLambdaRuntime
 import AWSLambdaEvents
 import Foundation
 import WebAuthn
+import SotoCognitoIdentityProvider
 
 struct AppSiteAssociation: Codable {
 	struct WebCredentials: Codable {
@@ -21,6 +22,8 @@ let conifg = WebAuthnConfig(relyingPartyDisplayName: "SwiftPasskeys",
 							timeout: 30.0)
 
 let manager = WebAuthnManager(config: conifg)
+let awsClient = AWSClient(httpClientProvider: .createNew)
+let userPoolId = ProcessInfo.processInfo.environment["USER_POOL_CLIENT_ID"] ?? ""
 
 struct AuthUser: User {
 	var userID: String
@@ -66,6 +69,8 @@ struct HTTPHandler: LambdaHandler {
 
 			let data = try JSONEncoder().encode(options)
 
+			try await signUp(username: username, credOptions: options, logger: context.logger)
+
 			var response = APIGatewayV2Response(statusCode: .created,
 												body: String(data: data, encoding: .utf8))
 			response.headers = ["content-type": "application/json"]
@@ -76,5 +81,22 @@ struct HTTPHandler: LambdaHandler {
 		default:
 			return APIGatewayV2Response(statusCode: .notFound)
 		}
+	}
+
+	private func signUp(username: String, credOptions: PublicKeyCredentialCreationOptions, logger: Logger) async throws {
+		let attributes: [CognitoIdentityProvider.AttributeType] = [
+			.init(name: "custom:publicKeyCred", value: credOptions.challenge),
+		]
+
+		let cognito = CognitoIdentityProvider(client: awsClient)
+
+		let signUpRequest = CognitoIdentityProvider.SignUpRequest(
+			clientId: userPoolId,
+			password: "webauthn",
+			userAttributes: attributes,
+			username: username
+		)
+
+		let _ = try await cognito.signUp(signUpRequest)
 	}
 }

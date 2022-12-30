@@ -15,6 +15,9 @@ Outputs:
   InvokeURL:
     Description: "HTTP API URL"
     Value: !Sub "https://${API}.execute-api.${AWS::Region}.amazonaws.com/${APIStage}/passkeys"
+  ClientId:
+    Description: "Cognito Client App Id"
+    Value: !Ref UserPoolClient
 
 Resources:
   
@@ -27,9 +30,17 @@ Resources:
       AutoVerifiedAttributes:
         - email
       LambdaConfig:
-        DefineAuthChallenge: !Sub "${AuthLambda.Arn}"
         CreateAuthChallenge: !Sub "${AuthLambda.Arn}"
+        DefineAuthChallenge: !Sub "${AuthLambda.Arn}"
+        PreSignUp: !Sub "${AuthLambda.Arn}"
         VerifyAuthChallengeResponse: !Sub "${AuthLambda.Arn}"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
       Schema:
         - AttributeDataType: String
           Name: publicKeyCred
@@ -110,6 +121,17 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
+      Policies:
+        - PolicyName: Cognito
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "cognito-idp:GetUser"
+                  - "cognito-idp:SignUp"
+                Resource:
+                  - "*"
 
   APILambda:
     Type: AWS::Lambda::Function
@@ -119,6 +141,9 @@ Resources:
       Code:
         S3Bucket: !Ref BucketName
         S3Key: SwiftPasskeyServerFunction.zip
+      Environment:
+        Variables:
+          USER_POOL_CLIENT_ID: !Ref UserPoolClient
       FunctionName: SwiftPasskeyServer
       Handler: SwiftPasskeyServer
       PackageType: Zip

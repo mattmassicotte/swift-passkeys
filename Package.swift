@@ -13,6 +13,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),
 		.package(url: "https://github.com/swift-server/webauthn-swift", branch: "refactor"),
+		.package(url: "https://github.com/soto-project/soto.git", from: "6.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -30,6 +31,10 @@ let package = Package(
 				.product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
 				.product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
 				.product(name: "WebAuthn", package: "webauthn-swift"),
+				.product(name: "SotoCognitoIdentityProvider", package: "soto"),
 			]),
+		.testTarget(
+			name: "SwiftPasskeyAuthorizerTests",
+			dependencies: ["SwiftPasskeyAuthorizer"])
     ]
 )
