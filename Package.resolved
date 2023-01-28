@@ -51,7 +51,7 @@
       "location" : "https://github.com/swift-server/swift-aws-lambda-events",
       "state" : {
         "branch" : "main",
-        "revision" : "501fe8ced1aa8325b2f570b214ced93c423eabdc"
+        "revision" : "a374581e7a2bd1fb3a2bb3ee22be78e397513ce7"
       }
     },
     {

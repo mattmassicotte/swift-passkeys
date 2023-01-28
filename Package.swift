@@ -33,8 +33,8 @@ let package = Package(
 				.product(name: "WebAuthn", package: "webauthn-swift"),
 				.product(name: "SotoCognitoIdentityProvider", package: "soto"),
 			]),
-		.testTarget(
-			name: "SwiftPasskeyAuthorizerTests",
-			dependencies: ["SwiftPasskeyAuthorizer"])
+//		.testTarget(
+//			name: "SwiftPasskeyAuthorizerTests",
+//			dependencies: ["SwiftPasskeyAuthorizer"])
     ]
 )

@@ -23,7 +23,8 @@ let conifg = WebAuthnConfig(relyingPartyDisplayName: "SwiftPasskeys",
 
 let manager = WebAuthnManager(config: conifg)
 let awsClient = AWSClient(httpClientProvider: .createNew)
-let userPoolId = ProcessInfo.processInfo.environment["USER_POOL_CLIENT_ID"] ?? ""
+let userPoolClientId = ProcessInfo.processInfo.environment["USER_POOL_CLIENT_ID"] ?? ""
+let userPoolId = ProcessInfo.processInfo.environment["USER_POOL_ID"] ?? ""
 
 struct AuthUser: User {
 	var userID: String
@@ -52,18 +53,12 @@ struct HTTPHandler: LambdaHandler {
 			response.headers = ["content-type": "application/json"]
 
 			return response
-		case (.GET, "/Test/makeCredential"):
+		case (.GET, "/Test/register"):
 			guard let username = event.queryStringParameters?["username"] else {
 				return .init(statusCode: .badRequest)
 			}
-			
-			let params = event.queryStringParameters ?? [:]
 
-			context.logger.info("params: \(params)")
-
-			let user = AuthUser(userID: UUID().uuidString, name: username, displayName: username)
-
-			let (options, _) = try manager.beginRegistration(user: user)
+			let options = try makeCredential(username: username)
 
 			context.logger.info("challenge: \(options.challenge)")
 
@@ -76,11 +71,19 @@ struct HTTPHandler: LambdaHandler {
 			response.headers = ["content-type": "application/json"]
 
 			return response
-		case (.POST, "/Test/makeCredential"):
-			return .init(statusCode: .ok)
+		case (.POST, "/Test/register"):
+			return .init(statusCode: .noContent)
 		default:
 			return APIGatewayV2Response(statusCode: .notFound)
 		}
+	}
+
+	private func makeCredential(username: String) throws -> PublicKeyCredentialCreationOptions {
+		let user = AuthUser(userID: UUID().uuidString, name: username, displayName: username)
+
+		let (options, _) = try manager.beginRegistration(user: user)
+
+		return options
 	}
 
 	private func signUp(username: String, credOptions: PublicKeyCredentialCreationOptions, logger: Logger) async throws {
@@ -91,7 +94,7 @@ struct HTTPHandler: LambdaHandler {
 		let cognito = CognitoIdentityProvider(client: awsClient)
 
 		let signUpRequest = CognitoIdentityProvider.SignUpRequest(
-			clientId: userPoolId,
+			clientId: userPoolClientId,
 			password: "webauthn",
 			userAttributes: attributes,
 			username: username

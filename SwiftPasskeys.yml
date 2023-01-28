@@ -144,6 +144,7 @@ Resources:
       Environment:
         Variables:
           USER_POOL_CLIENT_ID: !Ref UserPoolClient
+          USER_POOL_ID: !Ref UserPool
       FunctionName: SwiftPasskeyServer
       Handler: SwiftPasskeyServer
       PackageType: Zip
@@ -201,18 +202,4 @@ Resources:
     Properties:
       ApiId: !Ref API
       RouteKey: "GET /.well-known/apple-app-site-association"
-      Target: !Sub "integrations/${APIIntegration}"
-
-  MakeCredentialGetAPIRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref API
-      RouteKey: "GET /makeCredential"
-      Target: !Sub "integrations/${APIIntegration}"
-
-  MakeCredentialPostAPIRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref API
-      RouteKey: "POST /makeCredential"
       Target: !Sub "integrations/${APIIntegration}"
